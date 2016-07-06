@@ -1,0 +1,53 @@
+---
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  name: slowserver-v1
+spec:
+  replicas: 1
+  selector:
+    app: slowserver-v1
+  template:
+    metadata:
+      labels:
+        app: slowserver-v1
+    spec:
+      containers:
+      - image: jonazz/slowserver:0.0.1
+        imagePullPolicy: Always
+        resources:
+          limits:
+            cpu: 200m
+            memory: 100Mi
+          requests:
+            cpu: 200m
+            memory: 100Mi
+        name: slowserver
+        ports:
+        - containerPort: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: slowserver
+spec:
+  ports:
+  - port: 8080
+    protocol: TCP
+    name: http
+  selector:
+    app: slowserver-v1
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: slowserver
+  namespace: default
+spec:
+  rules:
+  - http:
+      paths:
+      - backend:
+          serviceName: slowserver
+          servicePort: 8080
+        path: /api/slowserver
